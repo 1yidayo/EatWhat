@@ -1,0 +1,55 @@
+.mood-box {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.mood-chat-window {
+  height: 240px;
+  overflow-y: auto;
+  background: #fef7f9;
+  padding: 10px;
+  border-radius: 14px;
+  margin: 10px 0;
+}
+
+.msg {
+  padding: 10px;
+  border-radius: 10px;
+  margin: 8px 0;
+  max-width: 70%;
+}
+
+.msg.user {
+  background: #ffb3c6;
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.msg.bot {
+  background: #ffe5ea;
+  align-self: flex-start;
+}
+
+.mood-input {
+  display: flex;
+  gap: 10px;
+}
+
+.mood-input input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #ff6b81;
+}
+
+.mood-input button {
+  padding: 10px 16px;
+  background: #ff6b81;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+}

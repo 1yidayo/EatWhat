@@ -1,122 +1,204 @@
-/* --------------------
-   全局設定
--------------------- */
+/* ===========================
+   全域設定
+=========================== */
 body {
   margin: 0;
-  background: #fafaf9;
   font-family: "Inter", sans-serif;
-  color: #1f2937;
+  background: #fff7f8; /* 柔粉色背景 */
+  color: #333;
 }
 
-/* --------------------
-   Hero Banner
--------------------- */
-.hero {
-  width: 100%;
-  padding: 80px 20px;
-  background: linear-gradient(to bottom right, #f97316, #ffb86c);
+/* ===========================
+   Header 主視覺
+=========================== */
+.header {
+  background: linear-gradient(135deg, #ffa6b9, #ff6f85);
+  padding: 50px 30px;
+  border-bottom-left-radius: 40px;
+  border-bottom-right-radius: 40px;
   color: white;
   text-align: center;
 }
 
-.hero h1 {
+.header h1 {
   font-size: 42px;
   margin: 0 0 10px;
+  font-weight: 700;
 }
 
-.hero p {
-  font-size: 18px;
+.header p {
+  margin: 0;
   opacity: 0.9;
-}
-
-.hero button {
-  margin-top: 20px;
-  padding: 14px 26px;
-  border: none;
-  background: white;
-  color: #f97316;
-  font-weight: bold;
-  border-radius: 12px;
-  cursor: pointer;
   font-size: 18px;
-  box-shadow: 0px 4px 12px rgba(255, 255, 255, 0.4);
 }
 
-/* --------------------
-   推薦卡片
--------------------- */
+/* ===========================
+   中央容器
+=========================== */
+.container {
+  width: 100%;
+  max-width: 900px;
+  margin: auto;
+  padding: 30px 20px;
+}
+
+/* ===========================
+   大按鈕（開始決定 / 重新開始）
+=========================== */
+.big-btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  margin: 12px 0;
+  font-size: 20px;
+  font-weight: 600;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background: #ff6f85;
+  color: white;
+  transition: 0.25s;
+}
+
+.big-btn:hover {
+  background: #ff4d6b;
+}
+
+.big-btn.secondary {
+  background: #ffe0e7;
+  color: #ff6f85;
+  border: 2px solid #ff6f85;
+}
+
+/* ===========================
+   選項按鈕（預算 / 清爽 / 重口味）
+=========================== */
+.options button {
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  margin: 8px 0;
+  border-radius: 16px;
+  border: 2px solid #ffa6b9;
+  background: white;
+  color: #ff6f85;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.25s;
+}
+
+.options button:hover {
+  background: #ffe6ea;
+}
+
+/* ===========================
+   推薦美食卡片（大圖）
+=========================== */
 .food-card {
   background: white;
-  border-radius: 14px;
-  padding: 16px;
-  margin: 10px 0;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  border-left: 6px solid #f97316;
-  transition: transform 0.2s;
+  border-radius: 20px;
+  margin: 20px 0;
+  box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  transition: 0.3s;
 }
 
 .food-card:hover {
-  transform: scale(1.03);
+  transform: translateY(-4px);
 }
 
-/* --------------------
-   餐廳卡片 UI
--------------------- */
+.food-card img {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+}
+
+.food-info {
+  padding: 16px;
+}
+
+.food-info h3 {
+  margin: 0;
+  font-size: 24px;
+  color: #ff4d6b;
+}
+
+/* ===========================
+   餐廳列表卡片
+=========================== */
 .restaurant-card {
   background: white;
   padding: 16px;
-  border-radius: 14px;
-  margin: 12px 0;
+  margin: 16px 0;
+  border-radius: 18px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.restaurant-card h3 {
-  margin: 0 0 6px;
+.restaurant-card img {
+  width: 100%;
+  height: 220px;
+  border-radius: 14px;
+  object-fit: cover;
 }
 
-.restaurant-card .rating {
-  color: #f97316;
-  font-weight: bold;
-}
-
-/* --------------------
-   聊天區塊
--------------------- */
-.chat-box {
+/* ===========================
+   心情聊天室
+=========================== */
+.mood-box {
   background: white;
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 20px;
+  padding: 20px;
   margin-top: 20px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.mood-chat-window {
+  height: 240px;
+  overflow-y: auto;
+  background: #fff1f4;
+  padding: 12px;
+  border-radius: 14px;
+  margin-bottom: 10px;
 }
 
 .msg {
-  margin: 10px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin: 8px 0;
+  max-width: 80%;
 }
 
 .msg.user {
-  text-align: right;
-  color: #f97316;
+  background: #ffc4d0;
+  margin-left: auto;
 }
 
 .msg.bot {
-  text-align: left;
-  color: #374151;
+  background: #ffe4ea;
 }
 
-.chat-input {
-  width: 70%;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #d4d4d4;
+.mood-input {
+  display: flex;
+  gap: 10px;
 }
 
-.chat-btn {
-  padding: 10px 20px;
-  margin-left: 8px;
-  background: #f97316;
+.mood-input input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ff6f85;
+  border-radius: 12px;
+}
+
+.mood-input button {
+  padding: 12px 16px;
+  background: #ff6f85;
   color: white;
+  border-radius: 12px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
+}
+.big-btn.secondary {
+  background: #ffd6dc;
+  color: #ff6b81;
+  border: 2px solid #ff6b81;
 }
