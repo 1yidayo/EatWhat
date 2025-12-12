@@ -7,9 +7,9 @@ body {
 
   background:
   linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
-  url("/public/螢幕擷取畫面\ 2025-12-13\ 010032.png") no-repeat center center fixed;
+  url("/public/image.png") no-repeat center center fixed;
   background-size: cover;
-  background-position: center 160px;
+  background-position: center;
 
 
   color: #333;
