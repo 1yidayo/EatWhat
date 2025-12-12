@@ -179,7 +179,6 @@ export default function App() {
               <>
                 <button className="big-btn" onClick={restart}>重新開始 🔄</button>
 
-
                 <button className="big-btn" onClick={findNearby}>
                   查看附近的「{finalFood[0].name}」店 📍
                 </button>
