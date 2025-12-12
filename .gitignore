@@ -1,0 +1,34 @@
+# --- Node / Vite ---
+node_modules/
+dist/
+.cache/
+.vscode/
+
+# --- Logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Environment / Secrets ---
+.env
+.env.local
+.env.development
+.env.production
+
+# --- Python backend ---
+backend/venv/
+backend/.venv/
+__pycache__/
+*.pyc
+
+# --- Build files ---
+*.log
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+
+node_modules/
+.vite/
+backend/__pycache__/
+*.pyc
