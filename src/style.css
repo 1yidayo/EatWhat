@@ -1,35 +1,44 @@
 /* ===========================
-   全域設定
+   全域設定（銀灰主題）
 =========================== */
 body {
   margin: 0;
   font-family: "Inter", sans-serif;
-  background: #fff7f8; /* 柔粉色背景 */
+
+  background:
+  linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
+  url("/public/螢幕擷取畫面\ 2025-12-13\ 010032.png") no-repeat center center fixed;
+  background-size: cover;
+  background-position: center 160px;
+
+
   color: #333;
 }
+
+
 .back-btn {
   margin-bottom: 12px;
   cursor: pointer;
   font-size: 18px;
-  color: #f97316;
+  color: #555;
   font-weight: 700;
   width: fit-content;
 }
 
 .back-btn:hover {
-  opacity: 0.8;
+  color: #222;
 }
 
 
 /* ===========================
-   Header 主視覺
+   Header 主視覺（霧銀漸層）
 =========================== */
 .header {
-  background: linear-gradient(135deg, #ffa6b9, #ff6f85);
+  background: linear-gradient(135deg, #D9D9D9, #BFBFBF);
   padding: 50px 30px;
   border-bottom-left-radius: 40px;
   border-bottom-right-radius: 40px;
-  color: white;
+  color: #222;
   text-align: center;
 }
 
@@ -37,13 +46,15 @@ body {
   font-size: 42px;
   margin: 0 0 10px;
   font-weight: 700;
+  color: #222;
 }
 
 .header p {
   margin: 0;
-  opacity: 0.9;
+  opacity: 0.8;
   font-size: 18px;
 }
+
 
 /* ===========================
    中央容器
@@ -54,6 +65,7 @@ body {
   margin: auto;
   padding: 30px 20px;
 }
+
 
 /* ===========================
    大按鈕（開始決定 / 重新開始）
@@ -68,23 +80,25 @@ body {
   border-radius: 20px;
   border: none;
   cursor: pointer;
-  background: #ff6f85;
-  color: white;
+
+  background: #C8C8C8; /* 霧銀 */
+  color: #222;
   transition: 0.25s;
 }
 
 .big-btn:hover {
-  background: #ff4d6b;
+  background: #B5B5B5; /* 上按時更深的銀灰 */
 }
 
 .big-btn.secondary {
-  background: #ffe0e7;
-  color: #ff6f85;
-  border: 2px solid #ff6f85;
+  background: #E4E4E4;
+  color: #333;
+  border: 2px solid #B4B4B4;
 }
 
+
 /* ===========================
-   選項按鈕（預算 / 清爽 / 重口味）
+   選項按鈕（預算 / 口味）
 =========================== */
 .options button {
   width: 100%;
@@ -92,17 +106,19 @@ body {
   font-size: 18px;
   margin: 8px 0;
   border-radius: 16px;
-  border: 2px solid #ffa6b9;
+
+  border: 2px solid #C9C9C9;
   background: white;
-  color: #ff6f85;
+  color: #444;
   cursor: pointer;
   font-weight: 600;
   transition: 0.25s;
 }
 
 .options button:hover {
-  background: #ffe6ea;
+  background: #E8E8E8;
 }
+
 
 /* ===========================
    推薦美食卡片（大圖）
@@ -133,8 +149,9 @@ body {
 .food-info h3 {
   margin: 0;
   font-size: 24px;
-  color: #ff4d6b;
+  color: #333;
 }
+
 
 /* ===========================
    餐廳列表卡片
@@ -154,6 +171,7 @@ body {
   object-fit: cover;
 }
 
+
 /* ===========================
    心情聊天室
 =========================== */
@@ -162,13 +180,13 @@ body {
   border-radius: 20px;
   padding: 20px;
   margin-top: 20px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
 
 .mood-chat-window {
   height: 240px;
   overflow-y: auto;
-  background: #fff1f4;
+  background: #F0F0F0;
   padding: 12px;
   border-radius: 14px;
   margin-bottom: 10px;
@@ -182,12 +200,12 @@ body {
 }
 
 .msg.user {
-  background: #ffc4d0;
+  background: #D0D0D0;
   margin-left: auto;
 }
 
 .msg.bot {
-  background: #ffe4ea;
+  background: #E4E4E4;
 }
 
 .mood-input {
@@ -198,20 +216,31 @@ body {
 .mood-input input {
   flex: 1;
   padding: 12px;
-  border: 1px solid #ff6f85;
+  border: 1px solid #B5B5B5;
   border-radius: 12px;
 }
 
 .mood-input button {
   padding: 12px 16px;
-  background: #ff6f85;
-  color: white;
+  background: #BFBFBF;
+  color: #222;
   border-radius: 12px;
   border: none;
   cursor: pointer;
+  transition: 0.2s;
 }
+
+.mood-input button:hover {
+  background: #AFAFAF;
+}
+
+
+/* 修正 secondary 再覆蓋一次 */
 .big-btn.secondary {
-  background: #ffd6dc;
-  color: #ff6b81;
-  border: 2px solid #ff6b81;
+  background: #DCDCDC;
+  color: #333;
+  border: 2px solid #B4B4B4;
+}
+.big-btn.secondary:hover {
+  background: #CFCFCF;
 }
