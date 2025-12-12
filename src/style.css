@@ -7,6 +7,19 @@ body {
   background: #fff7f8; /* 柔粉色背景 */
   color: #333;
 }
+.back-btn {
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #f97316;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.back-btn:hover {
+  opacity: 0.8;
+}
+
 
 /* ===========================
    Header 主視覺

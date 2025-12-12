@@ -1,11 +1,13 @@
 export default function FoodCard({ food }) {
   return (
     <div className="food-card">
-      <img src={food.image} alt={food.name} />
+      <img src={String(food.image)} alt={String(food.name)} />
+
       <div className="food-info">
-        <h3>{food.name}</h3>
-        <p>{food.desc}</p>
+        <h3>{String(food.name)}</h3>
+        <p>{String(food.desc)}</p>
       </div>
     </div>
   );
 }
+

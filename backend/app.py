@@ -4,15 +4,14 @@ from routers import chat, recommend, restaurants
 
 app = FastAPI()
 
-# CORS 設定
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],         # 或 ["http://localhost:5173"]
+    allow_credentials=True,      # ⭐ 必須加
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 路由
 app.include_router(chat.router)
 app.include_router(recommend.router)
 app.include_router(restaurants.router)
