@@ -28,7 +28,11 @@ export default function MoodChat({ onFoodSelect }) {
 
   return (
     <div className="mood-box">
-      <h2>🧠 心情聊天室</h2>
+      <h2>
+        <i class="fi fi-br-heart"></i>
+        心情聊天室
+      </h2>
+
       <p>告訴我你現在的心情或身體狀況，我幫你推薦舒服的料理。</p>
 
       <div className="mood-chat-window">
