@@ -27,4 +27,3 @@ export async function searchRestaurants(keyword) {
   const res = await fetch(`${BASE}/restaurants/?keyword=${keyword}`);
   return res.json();
 }
-
