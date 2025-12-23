@@ -9,6 +9,25 @@ export default function RestaurantCard({ r }) {
     `${r.name} ${address}`
   )}`;
 
+  // ===== 價格區間顯示 =====
+  const priceMap = {
+    0: "免費 / 非常便宜",
+    1: "便宜 💲",
+    2: "中等 💲💲",
+    3: "偏貴 💲💲💲",
+    4: "昂貴 💲💲💲💲",
+  };
+  const priceText = priceMap[r.price_level] || "無價格資訊";
+
+  // ===== 餐廳特色（types） =====
+  const features =
+    r.types
+      ?.filter(
+        (t) => !["point_of_interest", "establishment", "food"].includes(t)
+      )
+      .map((t) => t.replace(/_/g, " "))
+      .join("、") || "無餐廳特色資訊";
+
   return (
     <div className="restaurant-card">
       <img src={photo} alt={r.name} />
@@ -19,6 +38,14 @@ export default function RestaurantCard({ r }) {
         {r.rating && <p>⭐ 評分：{r.rating}</p>}
 
         <p>📍 {address}</p>
+
+        <p>💰 價格：{priceText}</p>
+
+        {r.features && r.features.length > 0 && (
+        <p>🍽 特色：{r.features.join(" · ")}</p>
+        )}
+
+        
 
         <a
           href={mapUrl}
