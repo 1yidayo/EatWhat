@@ -169,6 +169,23 @@ body {
   object-fit: cover;
 }
 
+/* Google Maps 按鈕 */
+.map-btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #B5B5B5;
+  color: white;
+  font-size: 15px;
+  text-decoration: none;
+  transition: 0.25s;
+}
+
+.map-btn:hover {
+  background: #9f9f9f;
+}
+
 
 /* ===========================
    心情聊天室
