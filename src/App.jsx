@@ -13,26 +13,6 @@ function BackButton({ onClick }) {
   );
 }
 
-// ===== 取得使用者目前定位（Promise 版）=====
-function getCurrentLocation() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject("瀏覽器不支援定位");
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        resolve({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        });
-      },
-      (err) => reject(err),
-      { enableHighAccuracy: true }
-    );
-  });
-}
-
 export default function App() {
   const [step, setStep] = useState(0);
 
@@ -41,7 +21,7 @@ export default function App() {
   const [temp, setTemp] = useState(null);
 
   const [finalFood, setFinalFood] = useState(null);
-  const [allOptions, setAllOptions] = useState([]);
+  const [allOptions, setAllOptions] = useState([]);  // ⭐ 新增：保存三道料理
   const [nearby, setNearby] = useState([]);
 
   function startFlow() {
@@ -75,32 +55,23 @@ export default function App() {
 
       const data = await res.json();
 
-      setFinalFood(data.options);
-      setAllOptions(data.options);
+      setFinalFood(data.options);   // 顯示三個
+      setAllOptions(data.options);  // ⭐ 保存三個，不會遺失
       setNearby([]);
       setStep(4);
+
     } catch {
       alert("AI 推薦失敗，請稍後再試！");
     }
   }
 
-  // ===== 使用目前定位找附近餐廳 =====
   async function findNearby() {
     if (!finalFood || finalFood.length === 0) return;
 
-    const keyword = finalFood[0].name + " 餐廳";
+    const key = finalFood[0].name + " 餐廳";
+    const r = await searchRestaurants(key);
 
-    try {
-      // 嘗試取得定位
-      const { lat, lng } = await getCurrentLocation();
-
-      const r = await searchRestaurants(keyword, lat, lng);
-      setNearby(r.results || []);
-    } catch (e) {
-      // 若使用者拒絕定位，退回純關鍵字搜尋
-      const r = await searchRestaurants(keyword);
-      setNearby(r.results || []);
-    }
+    setNearby(r.results || []);
   }
 
   function restart() {
@@ -123,6 +94,8 @@ export default function App() {
       <div className="container">
         <div className="main-card">
           <div className="flow-area">
+
+            {/* STEP 0 */}
             {step === 0 && (
               <div className="center-box">
                 <button className="big-btn" onClick={startFlow}>
@@ -131,6 +104,7 @@ export default function App() {
               </div>
             )}
 
+            {/* STEP 1 */}
             {step === 1 && (
               <>
                 <BackButton onClick={() => setStep(0)} />
@@ -145,6 +119,7 @@ export default function App() {
               </>
             )}
 
+            {/* STEP 2 */}
             {step === 2 && (
               <>
                 <BackButton onClick={() => setStep(1)} />
@@ -156,6 +131,7 @@ export default function App() {
               </>
             )}
 
+            {/* STEP 3 */}
             {step === 3 && (
               <>
                 <BackButton onClick={() => setStep(2)} />
@@ -167,13 +143,17 @@ export default function App() {
               </>
             )}
 
+            {/* STEP 4：顯示 3 道料理 or 單一料理 */}
             {step === 4 && finalFood && (
               <>
+                {/* ⭐ 重點：返回 → 回到三選一，而不是 Step3 */}
                 <BackButton
                   onClick={() => {
                     if (finalFood.length === 1) {
+                      // 單選模式 → 回到三選一
                       setFinalFood(allOptions);
                     } else {
+                      // 三選一模式 → 回到 Step3
                       setStep(3);
                     }
                     setNearby([]);
@@ -195,6 +175,7 @@ export default function App() {
                   ))}
                 </div>
 
+                {/* 重新抽三個 */}
                 {finalFood.length > 1 && (
                   <button
                     className="big-btn secondary"
@@ -204,6 +185,7 @@ export default function App() {
                   </button>
                 )}
 
+                {/* 單選模式 */}
                 {finalFood.length === 1 && (
                   <>
                     <button className="big-btn" onClick={restart}>
@@ -217,16 +199,23 @@ export default function App() {
                     {nearby.length > 0 && (
                       <div className="section">
                         <h2>附近餐廳</h2>
-                        {nearby.map((r, i) => (
-                          <RestaurantCard key={i} r={r} />
-                        ))}
+
+                        <div className="restaurant-scroll">
+                          <div className="restaurant-grid">
+                            {nearby.map((r, i) => (
+                              <RestaurantCard key={i} r={r} />
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )}
+
                   </>
                 )}
               </>
             )}
 
+            {/* 心情聊天室 */}
             {step === "mood" && (
               <>
                 <BackButton onClick={() => setStep(0)} />
@@ -242,6 +231,7 @@ export default function App() {
             )}
           </div>
 
+          {/* 底部互斥入口 */}
           {step !== "mood" ? (
             <>
               <div className="divider">或</div>

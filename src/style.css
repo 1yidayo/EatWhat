@@ -183,7 +183,7 @@ body {
 }
 
 .map-btn:hover {
-  background: #b16a93;
+  background: #bc6999;
 }
 
 
@@ -329,4 +329,27 @@ body {
   margin-top: 6px;
   font-size: 13px;
   color: #888;
+}
+/* ===== 附近餐廳滾動容器 ===== */
+.restaurant-scroll {
+  max-height: 420px;        /* ★ 控制高度：可改 360 / 480 */
+  overflow-y: auto;         /* 垂直滾動 */
+  padding-right: 6px;       /* 避免 scrollbar 壓到卡片 */
+  margin-top: 12px;
+}
+
+/* Grid 排列 */
+.restaurant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* 可選：美化 scrollbar（Chrome / Edge） */
+.restaurant-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.restaurant-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
 }
