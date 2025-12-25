@@ -23,7 +23,14 @@ export async function recommendAPI(preference) {
 }
 
 // --- Google Places 搜尋附近餐廳 ---
-export async function searchRestaurants(keyword) {
-  const res = await fetch(`${BASE}/restaurants/?keyword=${keyword}`);
+export async function searchRestaurants(keyword, lat, lng) {
+  let url = `http://127.0.0.1:8000/restaurants/?keyword=${encodeURIComponent(keyword)}`;
+
+  if (lat && lng) {
+    url += `&lat=${lat}&lng=${lng}`;
+  }
+
+  const res = await fetch(url);
   return res.json();
 }
+

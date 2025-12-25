@@ -1,15 +1,14 @@
-# backend/routers/restaurants.py
-
 from fastapi import APIRouter
 import requests
-from urllib.parse import quote
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 router = APIRouter(prefix="/restaurants")
 
 GOOGLE_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
-# ★★★ 餐廳特色翻譯表 ★★★
 TYPE_MAP = {
     "restaurant": "餐廳",
     "food": "美食",
@@ -18,8 +17,6 @@ TYPE_MAP = {
     "meal_takeaway": "可外帶",
     "meal_delivery": "外送",
     "bakery": "烘焙",
-    "supermarket": "超市",
-    "convenience_store": "便利商店",
     "fast_food": "速食",
     "hot_pot": "火鍋",
     "bbq": "燒烤",
@@ -27,55 +24,79 @@ TYPE_MAP = {
     "korean": "韓式",
     "chinese": "中式",
     "thai": "泰式",
-    "pizza": "披薩",
     "ramen": "拉麵",
     "noodle": "麵類",
-    "seafood": "海鮮",
     "dessert": "甜點",
 }
 
 def translate_types(types):
     translated = []
-    for t in types:
+    for t in types or []:
         if t in TYPE_MAP:
             translated.append(TYPE_MAP[t])
     return translated if translated else ["一般餐廳"]
 
-@router.get("/")
-def search(keyword: str):
-    if not GOOGLE_KEY:
-        return {"results": [], "error": "Missing GOOGLE_MAPS_API_KEY in .env"}
-
-    query = quote(keyword + " 餐廳")
-
-    url = (
-        "https://maps.googleapis.com/maps/api/place/textsearch/json"
-        f"?query={query}&language=zh-TW&key={GOOGLE_KEY}"
+def get_photo_url(photo_name: str, max_width: int = 400):
+    return (
+        f"https://places.googleapis.com/v1/{photo_name}/media"
+        f"?maxWidthPx={max_width}&key={GOOGLE_KEY}"
     )
 
-    google_res = requests.get(url).json()
+@router.get("/")
+def search(keyword: str, lat: float | None = None, lng: float | None = None):
+
+    if not GOOGLE_KEY:
+        return {"results": [], "error": "Missing GOOGLE_MAPS_API_KEY"}
+
+    url = "https://places.googleapis.com/v1/places:searchText"
+
+    headers = {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": GOOGLE_KEY,
+        "X-Goog-FieldMask": (
+            "places.displayName,"
+            "places.formattedAddress,"
+            "places.rating,"
+            "places.priceLevel,"
+            "places.types,"
+            "places.photos"
+        )
+    }
+
+    body = {
+        "textQuery": keyword,
+        "languageCode": "zh-TW",
+        "maxResultCount": 8,
+    }
+
+    # ★ 使用者定位（如果有）
+    if lat is not None and lng is not None:
+        body["locationBias"] = {
+            "circle": {
+                "center": {"latitude": lat, "longitude": lng},
+                "radius": 2000  # 2 公里
+            }
+        }
+
+    res = requests.post(url, headers=headers, json=body)
+    data = res.json()
 
     results = []
 
-    for item in google_res.get("results", []):
+    for place in data.get("places", []):
         photo_url = None
-        if "photos" in item:
-            ref = item["photos"][0]["photo_reference"]
-            photo_url = (
-                "https://maps.googleapis.com/maps/api/place/photo"
-                f"?maxwidth=400&photo_reference={ref}&key={GOOGLE_KEY}"
-            )
-
-        # ★★★ 翻譯餐廳特色 ★★★
-        raw_types = item.get("types", [])
-        translated = translate_types(raw_types)
+        photos = place.get("photos")
+        if photos:
+            photo_name = photos[0].get("name")
+            if photo_name:
+                photo_url = get_photo_url(photo_name)
 
         results.append({
-            "name": item.get("name"),
-            "rating": item.get("rating"),
-            "address": item.get("formatted_address"),
-            "price_level": item.get("price_level"),
-            "features": translated,  # <--- 餐廳特色（中文）
+            "name": place.get("displayName", {}).get("text"),
+            "rating": place.get("rating"),
+            "address": place.get("formattedAddress"),
+            "price_level": place.get("priceLevel"),
+            "features": translate_types(place.get("types")),
             "photo_url": photo_url
         })
 
