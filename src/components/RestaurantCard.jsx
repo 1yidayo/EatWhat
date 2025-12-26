@@ -1,10 +1,13 @@
 export default function RestaurantCard({ r }) {
+  // ===== 圖片 =====
   const photo = r.photo_url
     ? r.photo_url
     : "https://via.placeholder.com/400x250?text=No+Image";
 
+  // ===== 地址 =====
   const address = r.address || r.vicinity || "無法取得地址";
 
+  // ===== Google Maps 連結 =====
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     `${r.name} ${address}`
   )}`;
@@ -17,36 +20,49 @@ export default function RestaurantCard({ r }) {
     3: "偏貴 💲💲💲",
     4: "昂貴 💲💲💲💲",
   };
-  const priceText = priceMap[r.price_level] || "無價格資訊";
 
-  // ===== 餐廳特色（types） =====
-  const features =
-    r.types
-      ?.filter(
-        (t) => !["point_of_interest", "establishment", "food"].includes(t)
-      )
-      .map((t) => t.replace(/_/g, " "))
-      .join("、") || "無餐廳特色資訊";
+  const priceText =
+    typeof r.price_level === "number" ? priceMap[r.price_level] : "無價格資訊";
+
+  // ===== 距離顯示（⭐ 新增）=====
+  function renderDistance(distance) {
+    if (distance == null) return null;
+
+    if (distance < 1000) {
+      return `📍 ${distance} 公尺`;
+    }
+    return `📍 ${(distance / 1000).toFixed(1)} 公里`;
+  }
 
   return (
     <div className="restaurant-card">
+      {/* 圖片 */}
       <img src={photo} alt={r.name} />
 
       <div className="restaurant-info">
+        {/* 店名 */}
         <h3>{r.name}</h3>
 
-        {r.rating && <p>⭐ 評分：{r.rating}</p>}
-
-        <p>📍 {address}</p>
-
-        <p>💰 價格：{priceText}</p>
-
-        {r.features && r.features.length > 0 && (
-        <p>🍽 特色：{r.features.join(" · ")}</p>
+        {/* ⭐ 距離（新增，會自動判斷有沒有） */}
+        {r.distance != null && (
+          <p className="distance">{renderDistance(r.distance)}</p>
         )}
 
-        
+        {/* 評分 */}
+        {r.rating && <p>⭐ 評分：{r.rating}</p>}
 
+        {/* 地址 */}
+        <p>📍 {address}</p>
+
+        {/* 價格 */}
+        <p>💰 價格：{priceText}</p>
+
+        {/* 特色 */}
+        {r.features && r.features.length > 0 && (
+          <p>🍽 特色：{r.features.join(" · ")}</p>
+        )}
+
+        {/* Google Maps */}
         <a
           href={mapUrl}
           target="_blank"

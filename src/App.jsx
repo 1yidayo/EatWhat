@@ -21,8 +21,11 @@ export default function App() {
   const [temp, setTemp] = useState(null);
 
   const [finalFood, setFinalFood] = useState(null);
-  const [allOptions, setAllOptions] = useState([]);  // ⭐ 新增：保存三道料理
+  const [allOptions, setAllOptions] = useState([]);
   const [nearby, setNearby] = useState([]);
+
+  // ⭐ 排序方式（預設距離）
+  const [sortBy, setSortBy] = useState("distance");
 
   function startFlow() {
     setStep(1);
@@ -54,24 +57,42 @@ export default function App() {
       });
 
       const data = await res.json();
-
-      setFinalFood(data.options);   // 顯示三個
-      setAllOptions(data.options);  // ⭐ 保存三個，不會遺失
+      setFinalFood(data.options);
+      setAllOptions(data.options);
       setNearby([]);
       setStep(4);
-
     } catch {
       alert("AI 推薦失敗，請稍後再試！");
     }
   }
 
+  // ⭐ 查詢附近餐廳（只用電腦定位）
   async function findNearby() {
     if (!finalFood || finalFood.length === 0) return;
 
-    const key = finalFood[0].name + " 餐廳";
-    const r = await searchRestaurants(key);
+    const keyword = finalFood[0].name + " 餐廳";
 
-    setNearby(r.results || []);
+    if (!navigator.geolocation) {
+      alert("瀏覽器不支援定位功能");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const r = await searchRestaurants(keyword, latitude, longitude);
+        setNearby(r.results || []);
+        setSortBy("distance");
+      },
+      () => {
+        alert("⚠️ 無法取得定位，請允許定位權限");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      }
+    );
   }
 
   function restart() {
@@ -84,6 +105,25 @@ export default function App() {
     setStep(0);
   }
 
+  // ⭐ 排序邏輯（Google Maps 風格）
+  function getSortedRestaurants() {
+    const list = [...nearby];
+
+    switch (sortBy) {
+      case "rating":
+        return list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      case "price_low":
+        return list.sort(
+          (a, b) => (a.price_level ?? 99) - (b.price_level ?? 99)
+        );
+      case "price_high":
+        return list.sort((a, b) => (b.price_level ?? 0) - (a.price_level ?? 0));
+      case "distance":
+      default:
+        return list.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    }
+  }
+
   return (
     <div className="page">
       <header className="header">
@@ -94,8 +134,6 @@ export default function App() {
       <div className="container">
         <div className="main-card">
           <div className="flow-area">
-
-            {/* STEP 0 */}
             {step === 0 && (
               <div className="center-box">
                 <button className="big-btn" onClick={startFlow}>
@@ -104,7 +142,6 @@ export default function App() {
               </div>
             )}
 
-            {/* STEP 1 */}
             {step === 1 && (
               <>
                 <BackButton onClick={() => setStep(0)} />
@@ -119,7 +156,6 @@ export default function App() {
               </>
             )}
 
-            {/* STEP 2 */}
             {step === 2 && (
               <>
                 <BackButton onClick={() => setStep(1)} />
@@ -131,7 +167,6 @@ export default function App() {
               </>
             )}
 
-            {/* STEP 3 */}
             {step === 3 && (
               <>
                 <BackButton onClick={() => setStep(2)} />
@@ -143,19 +178,13 @@ export default function App() {
               </>
             )}
 
-            {/* STEP 4：顯示 3 道料理 or 單一料理 */}
             {step === 4 && finalFood && (
               <>
-                {/* ⭐ 重點：返回 → 回到三選一，而不是 Step3 */}
                 <BackButton
                   onClick={() => {
-                    if (finalFood.length === 1) {
-                      // 單選模式 → 回到三選一
-                      setFinalFood(allOptions);
-                    } else {
-                      // 三選一模式 → 回到 Step3
-                      setStep(3);
-                    }
+                    finalFood.length === 1
+                      ? setFinalFood(allOptions)
+                      : setStep(3);
                     setNearby([]);
                   }}
                 />
@@ -165,57 +194,60 @@ export default function App() {
                 <div className="food-options">
                   {finalFood.map((item, idx) => (
                     <div key={idx} onClick={() => setFinalFood([item])}>
-                      <FoodCard
-                        food={{
-                          name: item.name,
-                          desc: item.desc,
-                        }}
-                      />
+                      <FoodCard food={item} />
                     </div>
                   ))}
                 </div>
 
-                {/* 重新抽三個 */}
-                {finalFood.length > 1 && (
-                  <button
-                    className="big-btn secondary"
-                    onClick={() => chooseTemp(temp)}
-                  >
-                    重新抽三個
-                  </button>
-                )}
-
-                {/* 單選模式 */}
                 {finalFood.length === 1 && (
                   <>
-                    <button className="big-btn" onClick={restart}>
-                      重新開始
-                    </button>
-
                     <button className="big-btn" onClick={findNearby}>
-                      查看附近的「{finalFood[0].name}」
+                      查看附近餐廳
                     </button>
 
                     {nearby.length > 0 && (
                       <div className="section">
                         <h2>附近餐廳</h2>
 
+                        <div className="sort-bar">
+                          <button
+                            className={sortBy === "distance" ? "active" : ""}
+                            onClick={() => setSortBy("distance")}
+                          >
+                            📍 距離
+                          </button>
+                          <button
+                            className={sortBy === "rating" ? "active" : ""}
+                            onClick={() => setSortBy("rating")}
+                          >
+                            ⭐ 評分
+                          </button>
+                          <button
+                            className={sortBy === "price_low" ? "active" : ""}
+                            onClick={() => setSortBy("price_low")}
+                          >
+                            💰 低價
+                          </button>
+                          <button
+                            className={sortBy === "price_high" ? "active" : ""}
+                            onClick={() => setSortBy("price_high")}
+                          >
+                            💰 高價
+                          </button>
+                        </div>
+
                         <div className="restaurant-scroll">
-                          <div className="restaurant-grid">
-                            {nearby.map((r, i) => (
-                              <RestaurantCard key={i} r={r} />
-                            ))}
-                          </div>
+                          {getSortedRestaurants().map((r, i) => (
+                            <RestaurantCard key={i} r={r} />
+                          ))}
                         </div>
                       </div>
                     )}
-
                   </>
                 )}
               </>
             )}
 
-            {/* 心情聊天室 */}
             {step === "mood" && (
               <>
                 <BackButton onClick={() => setStep(0)} />
@@ -231,12 +263,14 @@ export default function App() {
             )}
           </div>
 
-          {/* 底部互斥入口 */}
           {step !== "mood" ? (
             <>
               <div className="divider">或</div>
               <div className="mood-entry">
-                <button className="big-btn mood" onClick={() => setStep("mood")}>
+                <button
+                  className="big-btn mood"
+                  onClick={() => setStep("mood")}
+                >
                   心情聊天室
                 </button>
                 <p className="hint">用心情聊聊，讓 EatWhat?! 更懂你</p>
@@ -246,7 +280,7 @@ export default function App() {
             <>
               <div className="divider">或</div>
               <div className="mood-entry">
-                <button className="big-btn" onClick={() => setStep(0)}>
+                <button className="big-btn" onClick={() => setStep(1)}>
                   開始決定
                 </button>
                 <p className="hint">改用條件選擇料理</p>
