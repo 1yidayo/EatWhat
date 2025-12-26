@@ -13,6 +13,25 @@ function BackButton({ onClick }) {
   );
 }
 
+/* ===============================
+   心情 → 推薦條件轉換
+================================ */
+function mapMoodToPreference(moodText) {
+  const text = moodText || "";
+
+  if (text.includes("冷")) {
+    return { budget: "不在意", taste: "清爽", temp: "熱" };
+  }
+  if (text.includes("壓力") || text.includes("累")) {
+    return { budget: "200", taste: "重口味", temp: "熱" };
+  }
+  if (text.includes("熱") || text.includes("流汗")) {
+    return { budget: "不在意", taste: "清爽", temp: "冷" };
+  }
+
+  return { budget: "150", taste: "清爽", temp: "熱" };
+}
+
 export default function App() {
   const [step, setStep] = useState(0);
 
@@ -24,8 +43,11 @@ export default function App() {
   const [allOptions, setAllOptions] = useState([]);
   const [nearby, setNearby] = useState([]);
 
-  // ⭐ 排序方式（預設距離）
   const [sortBy, setSortBy] = useState("distance");
+
+  // ⭐ 心情推薦狀態
+  const [pendingRecommend, setPendingRecommend] = useState(false);
+  const [moodText, setMoodText] = useState("");
 
   function startFlow() {
     setStep(1);
@@ -41,7 +63,13 @@ export default function App() {
     setStep(3);
   }
 
-  async function chooseTemp(val) {
+  /* ===============================
+     核心推薦（唯一來源）
+  ================================ */
+  async function chooseTemp(val, override = {}) {
+    const finalBudget = override.budget ?? budget;
+    const finalTaste = override.taste ?? taste;
+
     setTemp(val);
 
     try {
@@ -49,8 +77,8 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          budget,
-          taste,
+          budget: finalBudget,
+          taste: finalTaste,
           temp: val,
           message: "請根據以上條件推薦三道料理。",
         }),
@@ -66,7 +94,9 @@ export default function App() {
     }
   }
 
-  // ⭐ 查詢附近餐廳（只用電腦定位）
+  /* ===============================
+     查詢附近餐廳
+  ================================ */
   async function findNearby() {
     if (!finalFood || finalFood.length === 0) return;
 
@@ -84,40 +114,26 @@ export default function App() {
         setNearby(r.results || []);
         setSortBy("distance");
       },
-      () => {
-        alert("⚠️ 無法取得定位，請允許定位權限");
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
-      }
+      () => alert("⚠️ 無法取得定位，請允許定位權限"),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
   }
 
-  function restart() {
-    setBudget(null);
-    setTaste(null);
-    setTemp(null);
-    setFinalFood(null);
-    setAllOptions([]);
-    setNearby([]);
-    setStep(0);
-  }
-
-  // ⭐ 排序邏輯（Google Maps 風格）
   function getSortedRestaurants() {
     const list = [...nearby];
 
     switch (sortBy) {
       case "rating":
         return list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+
       case "price_low":
         return list.sort(
           (a, b) => (a.price_level ?? 99) - (b.price_level ?? 99)
         );
+
       case "price_high":
         return list.sort((a, b) => (b.price_level ?? 0) - (a.price_level ?? 0));
+
       case "distance":
       default:
         return list.sort((a, b) => (a.distance || 0) - (b.distance || 0));
@@ -128,7 +144,7 @@ export default function App() {
     <div className="page">
       <header className="header">
         <h1>🍽 EatWhat?!</h1>
-        <p>不知道要吃什麼？我幫你選！</p>
+        <p>不知道要吃什麼？我陪你慢慢決定</p>
       </header>
 
       <div className="container">
@@ -180,15 +196,7 @@ export default function App() {
 
             {step === 4 && finalFood && (
               <>
-                <BackButton
-                  onClick={() => {
-                    finalFood.length === 1
-                      ? setFinalFood(allOptions)
-                      : setStep(3);
-                    setNearby([]);
-                  }}
-                />
-
+                <BackButton onClick={() => setStep(0)} />
                 <h2>這三道料理最適合你</h2>
 
                 <div className="food-options">
@@ -209,6 +217,7 @@ export default function App() {
                       <div className="section">
                         <h2>附近餐廳</h2>
 
+                        {/* ⭐ 排序工具列（補回來） */}
                         <div className="sort-bar">
                           <button
                             className={sortBy === "distance" ? "active" : ""}
@@ -216,18 +225,21 @@ export default function App() {
                           >
                             📍 距離
                           </button>
+
                           <button
                             className={sortBy === "rating" ? "active" : ""}
                             onClick={() => setSortBy("rating")}
                           >
                             ⭐ 評分
                           </button>
+
                           <button
                             className={sortBy === "price_low" ? "active" : ""}
                             onClick={() => setSortBy("price_low")}
                           >
                             💰 低價
                           </button>
+
                           <button
                             className={sortBy === "price_high" ? "active" : ""}
                             onClick={() => setSortBy("price_high")}
@@ -248,45 +260,67 @@ export default function App() {
               </>
             )}
 
+            {/* ===== 心情聊天室 ===== */}
             {step === "mood" && (
               <>
                 <BackButton onClick={() => setStep(0)} />
+
                 <MoodChat
-                  onFoodSelect={(foodText) => {
-                    const dish = foodText.split("\n")[0];
-                    setFinalFood([{ name: dish, desc: "心情推薦料理" }]);
-                    setAllOptions([{ name: dish, desc: "心情推薦料理" }]);
-                    setStep(4);
+                  onFoodSelect={(payload) => {
+                    if (payload?.type === "CONFIRM_RECOMMEND") {
+                      setMoodText(payload.mood);
+                      setPendingRecommend(true);
+                    }
                   }}
                 />
+
+                {pendingRecommend && (
+                  <div className="food-suggest-box">
+                    <h3>🍽 要幫你認真挑適合的料理嗎？</h3>
+
+                    <button
+                      className="big-btn"
+                      onClick={async () => {
+                        const pref = mapMoodToPreference(moodText);
+
+                        await chooseTemp(pref.temp, {
+                          budget: pref.budget,
+                          taste: pref.taste,
+                        });
+
+                        setMoodText("");
+                        setPendingRecommend(false);
+                      }}
+                    >
+                      開始推薦
+                    </button>
+
+                    <button
+                      className="secondary-btn"
+                      onClick={() => setPendingRecommend(false)}
+                    >
+                      先不用，繼續聊
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>
 
-          {step !== "mood" ? (
-            <>
-              <div className="divider">或</div>
-              <div className="mood-entry">
-                <button
-                  className="big-btn mood"
-                  onClick={() => setStep("mood")}
-                >
-                  心情聊天室
-                </button>
-                <p className="hint">用心情聊聊，讓 EatWhat?! 更懂你</p>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="divider">或</div>
-              <div className="mood-entry">
-                <button className="big-btn" onClick={() => setStep(1)}>
-                  開始決定
-                </button>
-                <p className="hint">改用條件選擇料理</p>
-              </div>
-            </>
-          )}
+          <div className="divider">或</div>
+          <div className="mood-entry">
+            <button
+              className="big-btn mood"
+              onClick={() => setStep(step === "mood" ? 1 : "mood")}
+            >
+              {step === "mood" ? "用條件選擇" : "心情聊天室"}
+            </button>
+            <p className="hint">
+              {step === "mood"
+                ? "改用條件選擇料理"
+                : "聊聊心情，讓 EatWhat?! 更懂你"}
+            </p>
+          </div>
         </div>
       </div>
     </div>
