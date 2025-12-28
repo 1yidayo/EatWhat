@@ -1,23 +1,40 @@
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
-from core.llm import ask_llm
+from pydantic import BaseModel
+import os
+from openai import OpenAI
 
-router = APIRouter(prefix="/chat")
+router = APIRouter(prefix="/chat", tags=["Chat"])
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+class ChatReq(BaseModel):
+    message: str
 
 @router.post("/")
-def chat_api(data: dict):
-    budget = data.get("budget", "")
-    taste = data.get("taste", "")
-    temp = data.get("temp", "")
-    message = data.get("message", "")
+def chat(req: ChatReq):
+    system_prompt = """
+你是一位溫柔、善於傾聽的陪伴者。
+請遵守：
+1. 先回應使用者的情緒或身體狀況
+2. 語氣溫柔，不說教
+3. 不要問問題
+4. 回覆 1–2 句即可
+"""
 
-    full_prompt = (
-        f"預算：{budget}\n"
-        f"口味：{taste}\n"
-        f"溫度偏好：{temp}\n"
-        f"{message}"
-    )
+    try:
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": req.message},
+            ],
+            temperature=0.6,
+        )
 
-    result = ask_llm(full_prompt)
+        reply = resp.choices[0].message.content.strip()
+        return {"reply": reply}
 
-    return JSONResponse(content=result, media_type="application/json")
+    except Exception as e:
+        return {
+            "reply": "我在這裡陪你，有點卡住但沒關係 💛"
+        }
