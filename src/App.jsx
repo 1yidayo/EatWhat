@@ -13,6 +13,7 @@ function BackButton({ onClick }) {
   );
 }
 
+
 /* ===============================
    心情 → 推薦條件轉換
 ================================ */
@@ -39,6 +40,10 @@ export default function App() {
   const [taste, setTaste] = useState(null);
   const [temp, setTemp] = useState(null);
   const [showNearby, setShowNearby] = useState(false);
+
+  const [locationQuery, setLocationQuery] = useState("");
+  const [locationResults, setLocationResults] = useState([]);
+
 
 
   const [finalFood, setFinalFood] = useState(null);
@@ -95,6 +100,23 @@ export default function App() {
       alert("AI 推薦失敗，請稍後再試！");
     }
   }
+
+async function searchLocationRestaurants() {
+  if (!locationQuery.trim()) {
+    alert("請輸入地址或地標！");
+    return;
+  }
+
+  const res = await fetch(
+    `http://127.0.0.1:8000/restaurants/by_location?q=${encodeURIComponent(
+      locationQuery
+    )}`
+  );
+
+  const data = await res.json();
+  setLocationResults(data.results || []);
+}
+
 
   /* ===============================
      查詢附近餐廳
@@ -153,12 +175,68 @@ export default function App() {
         <div className="main-card">
           <div className="flow-area">
             {step === 0 && (
-              <div className="center-box">
-                <button className="big-btn" onClick={startFlow}>
-                  開始決定
-                </button>
-              </div>
-            )}
+  <div className="center-box" 
+  style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      textAlign: "center",
+    }}>
+
+    <button className="big-btn" onClick={startFlow}>
+      開始決定
+    </button>
+
+    <button
+      className="big-btn"
+      onClick={() => setStep("loc")}
+    >
+      輸入地標找美食
+    </button>
+
+  </div>
+)}
+
+{/* ===== 地點搜尋 10 間餐廳 ===== */}
+{step === "loc" && (
+  <div style={{ textAlign: "center" }}>
+    <BackButton onClick={() => setStep(0)} />
+
+    <h2>輸入地標或地址</h2>
+
+    <input
+      type="text"
+      name="location"
+      placeholder="例如：台北車站、小巨蛋、西門町..."
+      onChange={(e) => setLocationQuery(e.target.value)}
+      style={{
+        width: "90%",
+        padding: "12px",
+        borderRadius: "10px",
+        marginTop: "10px",
+        fontSize: "18px",
+      }}
+    />
+
+    <button
+      className="big-btn"
+      style={{ marginTop: "20px" }}
+      onClick={searchLocationRestaurants}
+    >
+      搜尋餐廳
+    </button>
+
+    {/* 顯示結果 */}
+    {locationResults.length > 0 && (
+      <div className="restaurant-scroll" style={{ marginTop: "20px" }}>
+        {locationResults.map((r, idx) => (
+          <RestaurantCard key={idx} r={r} />
+        ))}
+      </div>
+    )}
+  </div>
+)}
+
 
             {step === 1 && (
               <>
