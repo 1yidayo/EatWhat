@@ -38,15 +38,14 @@ export default function App() {
   const [budget, setBudget] = useState(null);
   const [taste, setTaste] = useState(null);
   const [temp, setTemp] = useState(null);
-  const [showNearby, setShowNearby] = useState(false);
+  const [region, setRegion] = useState(""); // 新增地區 state
 
+  const [showNearby, setShowNearby] = useState(false);
   const [locationQuery, setLocationQuery] = useState("");
   const [locationResults, setLocationResults] = useState([]);
-
   const [finalFood, setFinalFood] = useState(null);
   const [allOptions, setAllOptions] = useState([]);
   const [nearby, setNearby] = useState([]);
-
   const [sortBy, setSortBy] = useState("distance");
 
   // ⭐ 心情推薦狀態
@@ -73,8 +72,15 @@ export default function App() {
   async function chooseTemp(val, override = {}) {
     const finalBudget = override.budget ?? budget;
     const finalTaste = override.taste ?? taste;
+    const finalRegion = override.region ?? region;
 
     setTemp(val);
+
+    // 如果地區還沒輸入，就先跳到地區輸入 step
+    if (!finalRegion) {
+      setStep("region");
+      return;
+    }
 
     try {
       const res = await fetch("http://127.0.0.1:8000/chat/", {
@@ -84,6 +90,7 @@ export default function App() {
           budget: finalBudget,
           taste: finalTaste,
           temp: val,
+          region: finalRegion,
           message: "請根據以上條件推薦三道料理。",
         }),
       });
@@ -114,9 +121,6 @@ export default function App() {
     setLocationResults(data.results || []);
   }
 
-  /* ===============================
-     查詢附近餐廳
-  ================================ */
   async function findNearby() {
     if (!finalFood || finalFood.length === 0) return;
 
@@ -152,7 +156,9 @@ export default function App() {
         );
 
       case "price_high":
-        return list.sort((a, b) => (b.price_level ?? 0) - (a.price_level ?? 0));
+        return list.sort(
+          (a, b) => (b.price_level ?? 0) - (a.price_level ?? 0)
+        );
 
       case "distance":
       default:
@@ -219,12 +225,8 @@ export default function App() {
                   搜尋餐廳
                 </button>
 
-                {/* 顯示結果 */}
                 {locationResults.length > 0 && (
-                  <div
-                    className="restaurant-scroll"
-                    style={{ marginTop: "20px" }}
-                  >
+                  <div className="restaurant-scroll" style={{ marginTop: "20px" }}>
                     {locationResults.map((r, idx) => (
                       <RestaurantCard key={idx} r={r} />
                     ))}
@@ -269,9 +271,36 @@ export default function App() {
               </>
             )}
 
+            {/* ===== 地區輸入 step ===== */}
+            {step === "region" && (
+              <>
+                <BackButton onClick={() => setStep(3)} />
+                <h2>你想找哪個地區的？</h2>
+                <input
+                  type="text"
+                  placeholder="例如：台北市、大安區、中山區..."
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                  style={{
+                    width: "90%",
+                    padding: "12px",
+                    borderRadius: "10px",
+                    marginTop: "10px",
+                    fontSize: "18px",
+                  }}
+                />
+                <button
+                  className="big-btn"
+                  style={{ marginTop: "20px" }}
+                  onClick={() => chooseTemp(temp, { region })}
+                >
+                  確認地區
+                </button>
+              </>
+            )}
+
             {step === 4 && (
               <>
-                {/* 無推薦料理 → 顯示請再試一次 */}
                 {finalFood.length === 0 && (
                   <div
                     className="center-box"
@@ -290,7 +319,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 有推薦料理 → 顯示正常流程 */}
                 {finalFood.length > 0 && (
                   <>
                     <BackButton
@@ -311,7 +339,7 @@ export default function App() {
                           key={idx}
                           onClick={() => {
                             setFinalFood([item]);
-                            setNearby([]); // ← 不留上一次的結果
+                            setNearby([]);
                           }}
                         >
                           <FoodCard food={item} />
