@@ -92,9 +92,5 @@ def ask_llm(prompt: str) -> dict:
     except:
         # fallback（三道固定）
         return {
-            "options": [
-                {"name": "滷肉飯", "image_keyword": "braised pork rice", "desc": "fallback"},
-                {"name": "牛肉麵", "image_keyword": "beef noodles", "desc": "fallback"},
-                {"name": "雞腿便當", "image_keyword": "chicken bento", "desc": "fallback"},
-            ]
-        }
+    "options": []
+}

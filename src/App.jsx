@@ -38,6 +38,8 @@ export default function App() {
   const [budget, setBudget] = useState(null);
   const [taste, setTaste] = useState(null);
   const [temp, setTemp] = useState(null);
+  const [showNearby, setShowNearby] = useState(false);
+
 
   const [finalFood, setFinalFood] = useState(null);
   const [allOptions, setAllOptions] = useState([]);
@@ -194,71 +196,98 @@ export default function App() {
               </>
             )}
 
-            {step === 4 && finalFood && (
-              <>
-                <BackButton onClick={() => setStep(0)} />
-                <h2>這三道料理最適合你</h2>
+            {step === 4 && (
+  <>
+    {/* 無推薦料理 → 顯示請再試一次 */}
+    {finalFood.length === 0 && (
+  <div
+    className="center-box"
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      textAlign: "center",
+    }}
+  >
+    <h2>
+      目前沒有找到符合條件的料理 😢
+    </h2>
 
-                <div className="food-options">
-                  {finalFood.map((item, idx) => (
-                    <div key={idx} onClick={() => setFinalFood([item])}>
-                      <FoodCard food={item} />
-                    </div>
+    <button
+      className="big-btn"
+      onClick={() => setStep(3)}
+    >
+      返回重新選擇
+    </button>
+  </div>
+)}
+
+
+
+    {/* 有推薦料理 → 顯示正常流程 */}
+    {finalFood.length > 0 && (
+      <>
+        <BackButton onClick={() => {
+          if (finalFood.length === 1) {
+            setFinalFood(allOptions);
+          } else {
+            setStep(3);
+          }
+        }} />
+
+        <h2>這三道料理最適合你</h2>
+
+        <div className="food-options">
+          {finalFood.map((item, idx) => (
+            <div
+  key={idx}
+  onClick={() => {
+    setFinalFood([item]);
+    setNearby([]);        // ← 不留上一次的結果
+  }}
+>
+
+              <FoodCard food={item} />
+            </div>
+          ))}
+        </div>
+
+        {finalFood.length > 1 && (
+          <button className="big-btn secondary" onClick={() => chooseTemp(temp)}>
+            重新抽三個 🔄
+          </button>
+        )}
+
+        {finalFood.length === 1 && (
+          <>
+            <button
+  className="big-btn"
+  onClick={async () => {
+    setShowNearby(true);
+    await findNearby();
+  }}
+>
+  查看附近餐廳
+</button>
+
+
+            {nearby.length > 0 && (
+              <div className="section">
+                <div className="restaurant-scroll">
+                  {nearby.map((r, i) => (
+                    <RestaurantCard key={i} r={r} />
                   ))}
                 </div>
-
-                {finalFood.length === 1 && (
-                  <>
-                    <button className="big-btn" onClick={findNearby}>
-                      查看附近餐廳
-                    </button>
-
-                    {nearby.length > 0 && (
-                      <div className="section">
-                        <h2>附近餐廳</h2>
-
-                        {/* ⭐ 排序工具列（補回來） */}
-                        <div className="sort-bar">
-                          <button
-                            className={sortBy === "distance" ? "active" : ""}
-                            onClick={() => setSortBy("distance")}
-                          >
-                            📍 距離
-                          </button>
-
-                          <button
-                            className={sortBy === "rating" ? "active" : ""}
-                            onClick={() => setSortBy("rating")}
-                          >
-                            ⭐ 評分
-                          </button>
-
-                          <button
-                            className={sortBy === "price_low" ? "active" : ""}
-                            onClick={() => setSortBy("price_low")}
-                          >
-                            💰 低價
-                          </button>
-
-                          <button
-                            className={sortBy === "price_high" ? "active" : ""}
-                            onClick={() => setSortBy("price_high")}
-                          >
-                            💰 高價
-                          </button>
-                        </div>
-
-                        <div className="restaurant-scroll">
-                          {getSortedRestaurants().map((r, i) => (
-                            <RestaurantCard key={i} r={r} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </>
+              </div>
             )}
+          </>
+        )}
+      </>
+    )}
+  </>
+)}
+
+
 
             {/* ===== 心情聊天室 ===== */}
             {step === "mood" && (
