@@ -29,9 +29,9 @@ export default function RestaurantCard({ r }) {
     if (distance == null) return null;
 
     if (distance < 1000) {
-      return `📍 ${distance} 公尺`;
+      return `📍 距離：${distance} 公尺`;
     }
-    return `📍 ${(distance / 1000).toFixed(1)} 公里`;
+    return `📍 距離：${(distance / 1000).toFixed(1)} 公里`;
   }
 
   return (
@@ -52,14 +52,14 @@ export default function RestaurantCard({ r }) {
         {r.rating && <p>⭐ 評分：{r.rating}</p>}
 
         {/* 地址 */}
-        <p>📍 {address}</p>
+        <p>🗺️ 地址：{address}</p>
 
         {/* 價格 */}
         <p>💰 價格：{priceText}</p>
 
         {/* 特色 */}
         {r.features && r.features.length > 0 && (
-          <p>🍽 特色：{r.features.join(" · ")}</p>
+          <p>🍽️ 特色：{r.features.join(" · ")}</p>
         )}
 
         {/* Google Maps */}

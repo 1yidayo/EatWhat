@@ -52,32 +52,42 @@ def chat_api(data: dict):
     region = data.get("region", "")
     message = data.get("message", "")
 
-    # 先請 AI 推薦料理（取得名稱、敘述、圖片關鍵字）
+    # AI 推薦料理（只負責料理）
     full_prompt = (
-        f"請依使用者偏好推薦三道料理，回傳 JSON，包含 name, desc, image_keyword：\n"
+        f"請依使用者偏好推薦三道料理，回傳 JSON，包含 name, desc：\n"
         f"預算：{budget}\n"
         f"口味：{taste}\n"
         f"溫度偏好：{temp}\n"
         f"{message}"
     )
+
     llm_result = ask_llm(full_prompt)
     recommended = llm_result.get("options", [])
 
-    # 對每道料理附加附近餐廳資訊
     options = []
+
     for food in recommended:
-        keyword = food.get("name")
-        nearby_restaurants = fetch_nearby_restaurants(region, keyword)
-        # 取第一間餐廳做顯示，如果沒有就空
-        first_restaurant = nearby_restaurants[0] if nearby_restaurants else {}
+        food_name = food.get("name")
+
+        # 🔥 用料理名找附近餐廳
+        restaurants = fetch_nearby_restaurants(region, food_name)
+
+        first = restaurants[0] if restaurants else {}
+
         options.append({
-            "name": food.get("name"),
+            "name": food_name,
             "desc": food.get("desc"),
-            "photo_url": first_restaurant.get("photo_url", ""),  # 優先用餐廳照片
-            "restaurant_name": first_restaurant.get("name", ""),
-            "rating": first_restaurant.get("rating", ""),
-            "price_level": first_restaurant.get("price_level", ""),
-            "address": first_restaurant.get("address", "")
+
+            # ⭐ 關鍵：圖片來自餐廳
+            "photo_url": first.get("photo_url", ""),
+
+            # 以下資訊「只在點進單一卡時用」
+            "restaurant_name": first.get("name", ""),
+            "rating": first.get("rating", ""),
+            "price_level": first.get("price_level", ""),
+            "address": first.get("address", ""),
         })
 
-    return JSONResponse({"options": options}, media_type="application/json")
+    return JSONResponse({"options": options})
+
+

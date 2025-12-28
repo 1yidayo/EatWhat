@@ -13,9 +13,6 @@ function BackButton({ onClick }) {
   );
 }
 
-/* ===============================
-   心情 → 推薦條件轉換
-================================ */
 function mapMoodToPreference(moodText) {
   const text = moodText || "";
 
@@ -38,7 +35,7 @@ export default function App() {
   const [budget, setBudget] = useState(null);
   const [taste, setTaste] = useState(null);
   const [temp, setTemp] = useState(null);
-  const [region, setRegion] = useState(""); // 新增地區 state
+  const [region, setRegion] = useState("");
 
   const [showNearby, setShowNearby] = useState(false);
   const [locationQuery, setLocationQuery] = useState("");
@@ -48,7 +45,6 @@ export default function App() {
   const [nearby, setNearby] = useState([]);
   const [sortBy, setSortBy] = useState("distance");
 
-  // ⭐ 心情推薦狀態
   const [pendingRecommend, setPendingRecommend] = useState(false);
   const [moodText, setMoodText] = useState("");
 
@@ -66,31 +62,25 @@ export default function App() {
     setStep(3);
   }
 
-  /* ===============================
-     核心推薦（唯一來源）
-  ================================ */
-  async function chooseTemp(val, override = {}) {
-    const finalBudget = override.budget ?? budget;
-    const finalTaste = override.taste ?? taste;
-    const finalRegion = override.region ?? region;
-
+  function chooseTemp(val) {
     setTemp(val);
+    setStep(3.5);
+  }
 
-    // 如果地區還沒輸入，就先跳到地區輸入 step
-    if (!finalRegion) {
-      setStep("region");
+  async function submitRecommend() {
+    if (!region) {
+      alert("請先輸入地區！");
       return;
     }
-
     try {
       const res = await fetch("http://127.0.0.1:8000/chat/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          budget: finalBudget,
-          taste: finalTaste,
-          temp: val,
-          region: finalRegion,
+          budget,
+          taste,
+          temp,
+          region,
           message: "請根據以上條件推薦三道料理。",
         }),
       });
@@ -99,6 +89,7 @@ export default function App() {
       setFinalFood(data.options);
       setAllOptions(data.options);
       setNearby([]);
+      setShowNearby(false);
       setStep(4);
     } catch {
       alert("AI 推薦失敗，請稍後再試！");
@@ -121,10 +112,8 @@ export default function App() {
     setLocationResults(data.results || []);
   }
 
-  async function findNearby() {
-    if (!finalFood || finalFood.length === 0) return;
-
-    const keyword = finalFood[0].name + " 餐廳";
+  async function findNearby(foodName) {
+    if (!foodName) return;
 
     if (!navigator.geolocation) {
       alert("瀏覽器不支援定位功能");
@@ -134,32 +123,47 @@ export default function App() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-        const r = await searchRestaurants(keyword, latitude, longitude);
+        const r = await searchRestaurants(foodName + " 餐廳", latitude, longitude);
         setNearby(r.results || []);
         setSortBy("distance");
+        setShowNearby(true);
       },
-      () => alert("⚠️ 無法取得定位，請允許定位權限"),
+      async () => {
+        const input = prompt(
+          "⚠️ 無法取得定位，請允許定位權限或輸入詳細地址：",
+          ""
+        );
+        if (input && input.trim()) {
+          // 使用者輸入地址 → 用地址搜尋附近餐廳
+          const res = await fetch(
+            `http://127.0.0.1:8000/restaurants/by_location?q=${encodeURIComponent(
+              input
+            )}`
+          );
+          const data = await res.json();
+          setNearby(data.results || []);
+          setSortBy("distance");
+          setShowNearby(true);
+        } else {
+          // 使用者沒輸入 → 保持原本提示行為，或再嘗試定位
+          alert("將再嘗試使用定位抓附近餐廳，請允許定位權限");
+          // 這裡可以再呼叫一次 getCurrentPosition 或直接 return
+        }
+      },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
+
   }
 
   function getSortedRestaurants() {
     const list = [...nearby];
-
     switch (sortBy) {
       case "rating":
         return list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-
       case "price_low":
-        return list.sort(
-          (a, b) => (a.price_level ?? 99) - (b.price_level ?? 99)
-        );
-
+        return list.sort((a, b) => (a.price_level ?? 99) - (b.price_level ?? 99));
       case "price_high":
-        return list.sort(
-          (a, b) => (b.price_level ?? 0) - (a.price_level ?? 0)
-        );
-
+        return list.sort((a, b) => (b.price_level ?? 0) - (a.price_level ?? 0));
       case "distance":
       default:
         return list.sort((a, b) => (a.distance || 0) - (b.distance || 0));
@@ -174,54 +178,34 @@ export default function App() {
       </header>
 
       <div className="container">
-        <div className="main-card">
+        <div className={`main-card ${step === 4
+          ? finalFood.length === 1
+            ? "single"
+            : finalFood.length === 3
+              ? "wide"
+              : "medium"
+          : "" // 預設模式
+          }`}>
           <div className="flow-area">
             {step === 0 && (
-              <div
-                className="center-box"
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                }}
-              >
-                <button className="big-btn" onClick={startFlow}>
-                  開始決定
-                </button>
-
-                <button className="big-btn" onClick={() => setStep("loc")}>
-                  輸入地標找美食
-                </button>
+              <div className="center-box" style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+                <button className="big-btn" onClick={startFlow}>開始決定</button>
+                <button className="big-btn" onClick={() => setStep("loc")}>輸入地標找美食</button>
               </div>
             )}
 
-            {/* ===== 地點搜尋 10 間餐廳 ===== */}
             {step === "loc" && (
               <div style={{ textAlign: "center" }}>
                 <BackButton onClick={() => setStep(0)} />
-
                 <h2>輸入地標或地址</h2>
-
                 <input
                   type="text"
                   name="location"
                   placeholder="例如：台北車站、小巨蛋、西門町..."
                   onChange={(e) => setLocationQuery(e.target.value)}
-                  style={{
-                    width: "90%",
-                    padding: "12px",
-                    borderRadius: "10px",
-                    marginTop: "10px",
-                    fontSize: "18px",
-                  }}
+                  style={{ width: "90%", padding: "12px", borderRadius: "10px", marginTop: "10px", fontSize: "18px" }}
                 />
-
-                <button
-                  className="big-btn"
-                  style={{ marginTop: "20px" }}
-                  onClick={searchLocationRestaurants}
-                >
+                <button className="big-btn" style={{ marginTop: "20px" }} onClick={searchLocationRestaurants}>
                   搜尋餐廳
                 </button>
 
@@ -241,9 +225,7 @@ export default function App() {
                 <h2>你的預算大概是？</h2>
                 <div className="options">
                   {["100 以下", "150", "200", "不在意"].map((b) => (
-                    <button key={b} onClick={() => chooseBudget(b)}>
-                      {b}
-                    </button>
+                    <button key={b} onClick={() => chooseBudget(b)}>{b}</button>
                   ))}
                 </div>
               </>
@@ -271,8 +253,7 @@ export default function App() {
               </>
             )}
 
-            {/* ===== 地區輸入 step ===== */}
-            {step === "region" && (
+            {step === 3.5 && (
               <>
                 <BackButton onClick={() => setStep(3)} />
                 <h2>你想找哪個地區的？</h2>
@@ -281,114 +262,86 @@ export default function App() {
                   placeholder="例如：台北市、大安區、中山區..."
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  style={{
-                    width: "90%",
-                    padding: "12px",
-                    borderRadius: "10px",
-                    marginTop: "10px",
-                    fontSize: "18px",
-                  }}
+                  style={{ width: "94%", padding: "12px", borderRadius: "10px", marginTop: "10px", fontSize: "18px" }}
                 />
-                <button
-                  className="big-btn"
-                  style={{ marginTop: "20px" }}
-                  onClick={() => chooseTemp(temp, { region })}
-                >
+                <button className="big-btn" style={{ marginTop: "20px" }} onClick={submitRecommend}>
                   確認地區
                 </button>
               </>
             )}
 
-            {step === 4 && (
+            {/* ===== step 4：顯示推薦料理與搜尋附近 ===== */}
+            {step === 4 && finalFood && finalFood.length > 0 && (
               <>
-                {finalFood.length === 0 && (
-                  <div
-                    className="center-box"
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      textAlign: "center",
-                    }}
-                  >
-                    <h2>目前沒有找到符合條件的料理 😢</h2>
+                <BackButton
+                  onClick={() => {
+                    setShowNearby(false);
+                    setNearby([]);
+                    if (finalFood.length === 1) {
+                      // 單一卡，返回三張卡
+                      setFinalFood(allOptions);
+                    }
+                    else {
+                      setStep(3.5); // ⭐ 返回到輸入地區
+                    }
+                  }}
+                />
 
-                    <button className="big-btn" onClick={() => setStep(3)}>
-                      返回重新選擇
-                    </button>
-                  </div>
-                )}
 
-                {finalFood.length > 0 && (
-                  <>
-                    <BackButton
-                      onClick={() => {
-                        if (finalFood.length === 1) {
-                          setFinalFood(allOptions);
-                        } else {
-                          setStep(3);
-                        }
+                <h2>
+                  {finalFood.length === 1
+                    ? "太好了，你選擇這道料理！"
+                    : "這三道料理最適合你"}
+                </h2>
+
+
+                <div className="food-options">
+                  {finalFood.map((item, idx) => (
+                    <div
+                      key={idx}
+                      onClick={async () => {
+                        setFinalFood([item]);
+                        setNearby([]);
+                        await findNearby(item.name);
                       }}
-                    />
-
-                    <h2>這三道料理最適合你</h2>
-
-                    <div className="food-options">
-                      {finalFood.map((item, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => {
-                            setFinalFood([item]);
-                            setNearby([]);
+                      style={{ cursor: "pointer", width: "100%" }}
+                    >
+                      <FoodCard food={item} showRestaurantInfo={finalFood.length === 1} single={finalFood.length === 1}>
+                        <button
+                          className="small-btn"
+                          onClick={async (e) => {
+                            e.stopPropagation(); // ⭐ 重點
+                            setShowNearby(true);
+                            await findNearby(item.name);
                           }}
                         >
-                          <FoodCard food={item} />
-                        </div>
+                          搜尋附近與此美食相關的店家
+                        </button>
+                      </FoodCard>
+                    </div>
+                  ))}
+                </div>
+
+
+
+                {showNearby && nearby.length > 0 && (
+                  <div className="section">
+                    <h3>附近餐廳</h3>
+                    <div className="restaurant-scroll">
+                      {getSortedRestaurants().map((r, i) => (
+                        <RestaurantCard key={i} r={r} />
                       ))}
                     </div>
-
-                    {finalFood.length > 1 && (
-                      <button
-                        className="big-btn secondary"
-                        onClick={() => chooseTemp(temp)}
-                      >
-                        重新抽三個 🔄
-                      </button>
-                    )}
-
-                    {finalFood.length === 1 && (
-                      <>
-                        <button
-                          className="big-btn"
-                          onClick={async () => {
-                            setShowNearby(true);
-                            await findNearby();
-                          }}
-                        >
-                          查看附近餐廳
-                        </button>
-
-                        {nearby.length > 0 && (
-                          <div className="section">
-                            <div className="restaurant-scroll">
-                              {nearby.map((r, i) => (
-                                <RestaurantCard key={i} r={r} />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </>
+                  </div>
                 )}
               </>
             )}
 
-            {/* ===== 心情聊天室 ===== */}
+
+
             {step === "mood" && (
               <>
                 <BackButton onClick={() => setStep(0)} />
-
                 <MoodChat
                   onFoodSelect={(payload) => {
                     if (payload?.type === "CONFIRM_RECOMMEND") {
@@ -397,32 +350,24 @@ export default function App() {
                     }
                   }}
                 />
-
                 {pendingRecommend && (
                   <div className="food-suggest-box">
                     <h3>🍽 要幫你認真挑適合的料理嗎？</h3>
-
                     <button
                       className="big-btn"
                       onClick={async () => {
                         const pref = mapMoodToPreference(moodText);
-
                         await chooseTemp(pref.temp, {
                           budget: pref.budget,
                           taste: pref.taste,
                         });
-
                         setMoodText("");
                         setPendingRecommend(false);
                       }}
                     >
                       開始推薦
                     </button>
-
-                    <button
-                      className="secondary-btn"
-                      onClick={() => setPendingRecommend(false)}
-                    >
+                    <button className="secondary-btn" onClick={() => setPendingRecommend(false)}>
                       先不用，繼續聊
                     </button>
                   </div>
