@@ -373,35 +373,3 @@ body {
   color: white;
   border-color: #222;
 }
-.secondary-btn {
-  padding: 10px 22px;
-  border-radius: 15px; /* 膠囊型 */
-  border: 1.5px solid #d1d5db;
-  background: rgb(199, 183, 191);
-  color: #374151;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-
-  backdrop-filter: blur(6px);
-  transition: all 0.25s ease;
-}
-
-/* hover：輕微浮起 */
-.secondary-btn:hover {
-  background: rgba(177, 144, 154, 0.95);
-  border-color: #9ca3af;
-  transform: translateY(-1px);
-}
-
-/* 點擊感 */
-.secondary-btn:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-/* 可選：disable 狀態 */
-.secondary-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
