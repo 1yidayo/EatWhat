@@ -64,4 +64,3 @@ export default function FoodCard({ food, showRestaurantInfo = false, children, s
     </div>
   );
 }
-

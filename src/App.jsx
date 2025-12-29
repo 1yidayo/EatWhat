@@ -38,16 +38,11 @@ export default function App() {
   const [region, setRegion] = useState("");
 
   const [showNearby, setShowNearby] = useState(false);
-
   const [locationQuery, setLocationQuery] = useState("");
   const [locationResults, setLocationResults] = useState([]);
-
-
-
   const [finalFood, setFinalFood] = useState(null);
   const [allOptions, setAllOptions] = useState([]);
   const [nearby, setNearby] = useState([]);
-
   const [sortBy, setSortBy] = useState("distance");
 
   const [pendingRecommend, setPendingRecommend] = useState(false);
@@ -101,21 +96,21 @@ export default function App() {
     }
   }
 
-async function searchLocationRestaurants() {
-  if (!locationQuery.trim()) {
-    alert("請輸入地址或地標！");
-    return;
+  async function searchLocationRestaurants() {
+    if (!locationQuery.trim()) {
+      alert("請輸入地址或地標！");
+      return;
+    }
+
+    const res = await fetch(
+      `http://127.0.0.1:8000/restaurants/by_location?q=${encodeURIComponent(
+        locationQuery
+      )}`
+    );
+
+    const data = await res.json();
+    setLocationResults(data.results || []);
   }
-
-  const res = await fetch(
-    `http://127.0.0.1:8000/restaurants/by_location?q=${encodeURIComponent(
-      locationQuery
-    )}`
-  );
-
-  const data = await res.json();
-  setLocationResults(data.results || []);
-}
 
   async function findNearby(foodName) {
     if (!foodName) return;
@@ -214,17 +209,15 @@ async function searchLocationRestaurants() {
                   搜尋餐廳
                 </button>
 
-    {/* 顯示結果 */}
-    {locationResults.length > 0 && (
-      <div className="restaurant-scroll" style={{ marginTop: "20px" }}>
-        {locationResults.map((r, idx) => (
-          <RestaurantCard key={idx} r={r} />
-        ))}
-      </div>
-    )}
-  </div>
-)}
-
+                {locationResults.length > 0 && (
+                  <div className="restaurant-scroll" style={{ marginTop: "20px" }}>
+                    {locationResults.map((r, idx) => (
+                      <RestaurantCard key={idx} r={r} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {step === 1 && (
               <>

@@ -1,14 +1,48 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
+from fastapi.responses import JSONResponse
+from core.llm import ask_llm
+import requests
 import os
-from openai import OpenAI
+from urllib.parse import quote
 
-router = APIRouter(prefix="/chat", tags=["Chat"])
+router = APIRouter(prefix="/chat")
+GOOGLE_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def fetch_nearby_restaurants(region: str, keyword: str = ""):
+    if not GOOGLE_KEY:
+        return []
 
-class ChatReq(BaseModel):
-    message: str
+    # 1️⃣ 地區轉經緯度
+    geo_url = f"https://maps.googleapis.com/maps/api/geocode/json?address={quote(region)}&key={GOOGLE_KEY}"
+    geo_res = requests.get(geo_url).json()
+    if not geo_res.get("results"):
+        return []
+    loc = geo_res["results"][0]["geometry"]["location"]
+    lat, lng = loc["lat"], loc["lng"]
+
+    # 2️⃣ 搜附近餐廳（2km 內）
+    nearby_url = (
+        f"https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+        f"?location={lat},{lng}&radius=2000&type=restaurant&language=zh-TW&key={GOOGLE_KEY}"
+    )
+    if keyword:
+        nearby_url += f"&keyword={quote(keyword)}"
+
+    nearby_res = requests.get(nearby_url).json()
+    restaurants = []
+    for r in nearby_res.get("results", [])[:5]:  # 每道料理取前5間
+        photo_url = None
+        if "photos" in r:
+            ref = r["photos"][0]["photo_reference"]
+            photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference={ref}&key={GOOGLE_KEY}"
+        restaurants.append({
+            "name": r.get("name"),
+            "rating": r.get("rating"),
+            "address": r.get("vicinity"),
+            "price_level": r.get("price_level"),
+            "photo_url": photo_url
+        })
+    return restaurants
 
 @router.post("/")
 def chat_api(data: dict):
