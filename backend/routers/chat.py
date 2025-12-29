@@ -11,30 +11,49 @@ class ChatReq(BaseModel):
     message: str
 
 @router.post("/")
-def chat(req: ChatReq):
-    system_prompt = """
-你是一位溫柔、善於傾聽的陪伴者。
-請遵守：
-1. 先回應使用者的情緒或身體狀況
-2. 語氣溫柔，不說教
-3. 不要問問題
-4. 回覆 1–2 句即可
-"""
+def chat_api(data: dict):
+    budget = data.get("budget", "")
+    taste = data.get("taste", "")
+    temp = data.get("temp", "")
+    region = data.get("region", "")
+    message = data.get("message", "")
 
-    try:
-        resp = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": req.message},
-            ],
-            temperature=0.6,
-        )
+    # AI 推薦料理（只負責料理）
+    full_prompt = (
+        f"請依使用者偏好推薦三道料理，回傳 JSON，包含 name, desc：\n"
+        f"預算：{budget}\n"
+        f"口味：{taste}\n"
+        f"溫度偏好：{temp}\n"
+        f"{message}"
+    )
 
-        reply = resp.choices[0].message.content.strip()
-        return {"reply": reply}
+    llm_result = ask_llm(full_prompt)
+    recommended = llm_result.get("options", [])
 
-    except Exception as e:
-        return {
-            "reply": "我在這裡陪你，有點卡住但沒關係 💛"
-        }
+    options = []
+
+    for food in recommended:
+        food_name = food.get("name")
+
+        # 🔥 用料理名找附近餐廳
+        restaurants = fetch_nearby_restaurants(region, food_name)
+
+        first = restaurants[0] if restaurants else {}
+
+        options.append({
+            "name": food_name,
+            "desc": food.get("desc"),
+
+            # ⭐ 關鍵：圖片來自餐廳
+            "photo_url": first.get("photo_url", ""),
+
+            # 以下資訊「只在點進單一卡時用」
+            "restaurant_name": first.get("name", ""),
+            "rating": first.get("rating", ""),
+            "price_level": first.get("price_level", ""),
+            "address": first.get("address", ""),
+        })
+
+    return JSONResponse({"options": options})
+
+

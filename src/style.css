@@ -6,8 +6,8 @@ body {
   font-family: "Inter", sans-serif;
 
   background:
-  linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
-  url("/public/image.png") no-repeat center center fixed;
+    linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.55)),
+    url("/public/image.png") no-repeat center center fixed;
   background-size: cover;
   background-position: center;
 
@@ -34,7 +34,7 @@ body {
    Header 主視覺（霧銀漸層）
 =========================== */
 .header {
- background: linear-gradient(135deg, #626262, #dcd9d9);
+  background: linear-gradient(135deg, #626262, #dcd9d9);
   padding: 50px 30px;
   color: #222;
   text-align: center;
@@ -79,13 +79,15 @@ body {
   border: 2px solid #a7a7a7;
   cursor: pointer;
 
-  background: #C8C8C8; /* 霧銀 */
+  background: #C8C8C8;
+  /* 霧銀 */
   color: #222;
   transition: 0.25s;
 }
 
 .big-btn:hover {
-  background: #B5B5B5; /* 上按時更深的銀灰 */
+  background: #B5B5B5;
+  /* 上按時更深的銀灰 */
 }
 
 .big-btn.secondary {
@@ -124,11 +126,14 @@ body {
 .food-card {
   background: rgb(235, 226, 231);
   border-radius: 20px;
-  margin: 20px 0;
+  margin: 0;
+  /* 取消上下 margin，橫排用 gap 控制間距 */
   box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   transition: 0.3s;
+  height: 300px;
 }
+
 
 .food-card:hover {
   transform: translateY(-4px);
@@ -150,6 +155,43 @@ body {
   color: #333;
 }
 
+.food-options {
+  display: flex;
+  /* 水平排列 */
+  gap: 16px;
+  /* 卡片間距 */
+  justify-content: center;
+  /* 置中排列 */
+  margin-top: 20px;
+}
+
+.food-options>div {
+  flex: 1;
+  max-width: 260px;
+  /* 單張卡片寬度限制 */
+}
+
+.small-btn {
+  font-size: 14px;
+  font-weight: 400;
+  width: 90%;
+  margin: 20px auto 10px;
+  display: block;
+  padding: 6px 0;  
+  display: block;
+  border-radius: 10px;
+  border: 2px solid #a7a7a7;
+  cursor: pointer;
+  background: #C8C8C8;
+  /* 霧銀 */
+  color: #000000;
+  transition: 0.25s;
+}
+
+.small-btn:hover {
+  background: #B5B5B5;
+  /* 上按時更深的銀灰 */
+}
 
 /* ===========================
    餐廳列表卡片
@@ -256,16 +298,31 @@ body {
   color: #333;
   border: 2px solid #B4B4B4;
 }
+
 .big-btn.secondary:hover {
   background: #CFCFCF;
 }
+
 .main-card {
-  max-width: 480px;
-  margin: -20px auto 20px;
+  max-width: 500px;
+  margin: 20px auto 20px;
   background: white;
   border-radius: 24px;
   padding: 28px 22px 32px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+.main-card.single {
+  max-width: 55%; /* 單一卡 */
+  margin: 20px auto 20px;
+  background: white;
+  border-radius: 24px;
+  padding: 28px 22px 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+.main-card.wide {
+  max-width: 100% !important;
 }
 
 .main-card h2 {
@@ -313,12 +370,13 @@ body {
   border: 2px solid #a7a7a7;
   cursor: pointer;
 
-  background: #e4c1ce; 
+  background: #e4c1ce;
   color: #222;
   transition: 0.25s;
 }
+
 .big-btn.big-btn.mood:hover {
-  background: #c4a6b3; 
+  background: #c4a6b3;
 }
 
 .big-btn i {
@@ -330,11 +388,15 @@ body {
   font-size: 13px;
   color: #888;
 }
+
 /* ===== 附近餐廳滾動容器 ===== */
 .restaurant-scroll {
-  max-height: 420px;        /* ★ 控制高度：可改 360 / 480 */
-  overflow-y: auto;         /* 垂直滾動 */
-  padding-right: 6px;       /* 避免 scrollbar 壓到卡片 */
+  max-height: 420px;
+  /* ★ 控制高度：可改 360 / 480 */
+  overflow-y: auto;
+  /* 垂直滾動 */
+  padding-right: 6px;
+  /* 避免 scrollbar 壓到卡片 */
   margin-top: 12px;
 }
 
@@ -349,10 +411,12 @@ body {
 .restaurant-scroll::-webkit-scrollbar {
   width: 6px;
 }
+
 .restaurant-scroll::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.25);
   border-radius: 4px;
 }
+
 .sort-bar {
   display: flex;
   gap: 10px;
@@ -372,4 +436,38 @@ body {
   background: #222;
   color: white;
   border-color: #222;
+}
+
+.secondary-btn {
+  padding: 10px 22px;
+  border-radius: 15px;
+  /* 膠囊型 */
+  border: 1.5px solid #d1d5db;
+  background: rgb(199, 183, 191);
+  color: #374151;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+
+  backdrop-filter: blur(6px);
+  transition: all 0.25s ease;
+}
+
+/* hover：輕微浮起 */
+.secondary-btn:hover {
+  background: rgba(177, 144, 154, 0.95);
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+/* 點擊感 */
+.secondary-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* 可選：disable 狀態 */
+.secondary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
