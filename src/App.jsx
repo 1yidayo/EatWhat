@@ -322,7 +322,13 @@ export default function App() {
                   ))}
                 </div>
 
-
+                {finalFood && finalFood.length === 3 && (
+                  <div style={{ marginTop: "30px", textAlign: "center" }}>
+                    <button className="big-btn" onClick={submitRecommend}>
+                      🔄 重新抽三個
+                    </button>
+                  </div>
+                )}
 
                 {showNearby && nearby.length > 0 && (
                   <div className="section">
